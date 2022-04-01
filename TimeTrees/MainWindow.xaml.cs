@@ -3,101 +3,109 @@ using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using System.Windows.Media;
 using System.Windows.Shapes;
 
 namespace TimeTrees
 {
     public partial class MainWindow : Window
     {
-        private Dictionary<Rectangle, List<Line>> connections = new Dictionary<Rectangle, List<Line>>();
+        private Dictionary<StackPanel, List<Line>> connections = new Dictionary<StackPanel, List<Line>>();
         private Point? _movePoint;
+        private CreateObject createObject = new CreateObject();
 
         public MainWindow()
         {
             InitializeComponent();
         } 
 
-        private Rectangle CreateRectangle()
-        {
-            Rectangle rectangle = new Rectangle();
-            rectangle.Width = 60;
-            rectangle.Height = 60;
-            rectangle.Fill = Brushes.LightBlue;
-            connections.Add(rectangle, new List<Line>());
-
-            return rectangle;
-        }
-
-        private Line CreateLine()
-        {
-            Line line = new Line();
-            line.Stroke = Brushes.HotPink;
-            line.StrokeThickness = 3;
-            line.StrokeStartLineCap = PenLineCap.Round;
-            line.StrokeEndLineCap = PenLineCap.Round;
-            
-            return line;
-        }
-
         private void CreateFigure_Click(object sender, RoutedEventArgs e)
         {
-            Rectangle rectangle = CreateRectangle();
-            MainRoot.Children.Add(rectangle);
+            StackPanel stackPanel = createObject.CreateIcon();
+            connections.Add(stackPanel, new List<Line>());
+            MainRoot.Children.Add(stackPanel);
 
-            Canvas.SetLeft(rectangle, 350);
-            Canvas.SetTop(rectangle, 180);
+            Canvas.SetLeft(stackPanel, 350);
+            Canvas.SetTop(stackPanel, 180);
 
-            rectangle.MouseLeftButtonDown += FigureMouseDown;
-            rectangle.MouseMove += FigureMouseMove;
-            rectangle.MouseLeftButtonUp += FigureMouseUp;
-            rectangle.MouseRightButtonDown += Connection;
+            stackPanel.MouseLeftButtonDown += FigureMouseDown;
+            stackPanel.MouseMove += FigureMouseMove;
+            stackPanel.MouseLeftButtonUp += FigureMouseUp;
+            stackPanel.MouseRightButtonDown += WriteText;
+            stackPanel.MouseRightButtonDown += Connection;
         }
 
         private void FigureConnect_Click(object sender, RoutedEventArgs e)
         {
-            ConnectionFigures.connection = true;
+            ConnectionFigures connectionFigures = ConnectionFigures.GetInstance();
+            connectionFigures.connection = true;
         }
 
-        private void Connection(object sender, MouseEventArgs args)
+        private void File_Click(object sender, RoutedEventArgs e)
         {
-            if(ConnectionFigures.connection == false) return;
 
-            Point point = args.GetPosition(MainRoot);
+        }
 
-            if(ConnectionFigures.start.X == 0 && ConnectionFigures.start.Y == 0)
+        private void Save_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void WriteText(object sender, MouseEventArgs e)
+        {
+            ConnectionFigures connectionFigures = ConnectionFigures.GetInstance();
+            if (connectionFigures.connection) return;
+
+            StackPanel stackPanel = (StackPanel)sender;
+            foreach (var args in stackPanel.Children)
             {
-                ConnectionFigures.start = point;
-                ConnectionFigures.rectangleFirst = (Rectangle)sender;
+                if (args.GetType() == typeof(TextBox))
+                {
+                    TextBox textBox = (TextBox)args;
+                    textBox.IsEnabled = true;
+                }
+            }
+        }
+
+        private void Connection(object sender, MouseEventArgs e)
+        {
+            ConnectionFigures connectionFigures = ConnectionFigures.GetInstance();
+            if (connectionFigures.connection == false) return;
+
+            Point point = e.GetPosition(MainRoot);
+
+            if (connectionFigures.start.X == 0 && connectionFigures.start.Y == 0)
+            {
+                connectionFigures.start = point;
+                connectionFigures.rectangleFirst = (StackPanel)sender;
             }
 
-            else if(ConnectionFigures.end.X == 0 && ConnectionFigures.end.Y == 0)
+            else if(connectionFigures.end.X == 0 && connectionFigures.end.Y == 0)
             {
-                ConnectionFigures.rectangleLast = (Rectangle)sender;
-                ConnectionFigures.end = point;
+                connectionFigures.rectangleLast = (StackPanel)sender;
+                connectionFigures.end = point;
 
-                Line line = CreateLine();
+                Line line = createObject.CreateLine();
 
-                line.X1 = ConnectionFigures.start.X;
-                line.Y1 = ConnectionFigures.start.Y;
-                line.X2 = ConnectionFigures.end.X;
-                line.Y2 = ConnectionFigures.end.Y;
+                line.X1 = connectionFigures.start.X;
+                line.Y1 = connectionFigures.start.Y;
+                line.X2 = connectionFigures.end.X;
+                line.Y2 = connectionFigures.end.Y;
 
-                if (ConnectionFigures.rectangleFirst == ConnectionFigures.rectangleLast)
+                if (connectionFigures.rectangleFirst == connectionFigures.rectangleLast)
                 {
-                    ConnectionFigures.Clear();
+                    connectionFigures.Clear();
                     return;
                 }
 
-                foreach(Line lineStart in connections[ConnectionFigures.rectangleFirst])
-                    foreach (Line lineEnd in connections[ConnectionFigures.rectangleLast])
+                foreach(Line lineStart in connections[connectionFigures.rectangleFirst])
+                    foreach (Line lineEnd in connections[connectionFigures.rectangleLast])
                         if (lineStart == lineEnd) return;
 
-                connections[ConnectionFigures.rectangleFirst].Add(line);
-                connections[ConnectionFigures.rectangleLast].Add(line);
+                connections[connectionFigures.rectangleFirst].Add(line);
+                connections[connectionFigures.rectangleLast].Add(line);
                 MainRoot.Children.Add(line);
                 RedrawCanvas();
-                ConnectionFigures.Clear();
+                connectionFigures.Clear();
             }
 
         }
@@ -106,7 +114,7 @@ namespace TimeTrees
         {
             MainRoot.Children.Clear();
 
-            foreach(var keyValuePair in connections)
+            foreach (var keyValuePair in connections)
             {
                 foreach (Line line in keyValuePair.Value)
                 {
@@ -119,49 +127,47 @@ namespace TimeTrees
             }
         }
 
-        private void FigureMouseUp(object sender, MouseButtonEventArgs args)
+        private void FigureMouseDown(object sender, MouseButtonEventArgs e)
         {
-            Rectangle rectangle = (Rectangle)sender;
-            _movePoint = null;
-            rectangle.ReleaseMouseCapture();
+            StackPanel stackPanel = (StackPanel)sender;
+            _movePoint = e.GetPosition(stackPanel);
+            stackPanel.CaptureMouse();
         }
 
-        private void FigureMouseMove(object sender, MouseEventArgs args)
+        private void FigureMouseMove(object sender, MouseEventArgs e)
         {
-            Rectangle rectangle = (Rectangle)sender;
+            StackPanel stackPanel = (StackPanel)sender;
 
             if (_movePoint == null) { return; }
             
-            Point point = args.GetPosition(MainRoot) - (Vector)_movePoint.Value;
+            Point point = e.GetPosition(MainRoot) - (Vector)_movePoint.Value;
 
-            Canvas.SetLeft(rectangle, point.X);
-            Canvas.SetTop(rectangle, point.Y);
+            Canvas.SetLeft(stackPanel, point.X);
+            Canvas.SetTop(stackPanel, point.Y);
 
-            foreach (Line line in connections[rectangle])
+            foreach (Line line in connections[stackPanel])
             {
-                double line1 = Math.Sqrt(Math.Pow(point.X + rectangle.Width / 2 - line.X1, 2) + Math.Pow(point.Y + rectangle.Height / 2 - line.Y1, 2));
-                double line2 = Math.Sqrt(Math.Pow(point.X + rectangle.Width / 2 - line.X2, 2) + Math.Pow(point.Y + rectangle.Height / 2 - line.Y2, 2));
+                double line1 = Math.Sqrt(Math.Pow(point.X + stackPanel.ActualWidth / 2 - line.X1, 2) + Math.Pow(point.Y + stackPanel.ActualHeight / 2 - line.Y1, 2));
+                double line2 = Math.Sqrt(Math.Pow(point.X + stackPanel.ActualWidth / 2 - line.X2, 2) + Math.Pow(point.Y + stackPanel.ActualHeight / 2 - line.Y2, 2));
 
                 if(line1 < line2)
                 {
-                    line.X1 = point.X + rectangle.Width / 2;
-                    line.Y1 = point.Y + rectangle.Height / 2;
+                    line.X1 = point.X + stackPanel.ActualWidth / 2;
+                    line.Y1 = point.Y + stackPanel.ActualHeight / 2;
                 }
                 else
                 {
-                    line.X2 = point.X + rectangle.Width / 2;
-                    line.Y2 = point.Y + rectangle.Height / 2;
+                    line.X2 = point.X + stackPanel.ActualWidth / 2;
+                    line.Y2 = point.Y + stackPanel.ActualHeight / 2;
                 }
-
             }
-
         }
 
-        private void FigureMouseDown(object sender, MouseButtonEventArgs args)
+        private void FigureMouseUp(object sender, MouseButtonEventArgs e)
         {
-            Rectangle rectangle = (Rectangle)sender;
-            _movePoint = args.GetPosition(rectangle);
-            rectangle.CaptureMouse();
+            StackPanel stackPanel = (StackPanel)sender;
+            _movePoint = null;
+            stackPanel.ReleaseMouseCapture();
         }
     }
 }

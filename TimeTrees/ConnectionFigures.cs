@@ -1,25 +1,32 @@
 ﻿using System.Windows;
-using System.Windows.Shapes;
+using System.Windows.Controls;
 
 namespace TimeTrees
 {
-    static class ConnectionFigures
+    class ConnectionFigures
     {
-        public static bool connection;
-        public static Point start;
-        public static Point end;
-        public static Rectangle? rectangleFirst;
-        public static Rectangle? rectangleLast;
+        public bool connection;
+        public Point start;
+        public Point end;
+        public StackPanel? rectangleFirst;
+        public StackPanel? rectangleLast;
+        private static ConnectionFigures? instance;
 
-        public static void Clear()
+        private ConnectionFigures() { }
+
+        public static ConnectionFigures GetInstance()
         {
-            ConnectionFigures.connection = false;
-            ConnectionFigures.start = new Point();
-            ConnectionFigures.end = new Point();
-            ConnectionFigures.rectangleFirst = null;
-            ConnectionFigures.rectangleLast = null;
+            if(instance == null) instance = new ConnectionFigures();
+            return instance;
         }
 
+        public void Clear()
+        {
+            connection = false;
+            start = new Point();
+            end = new Point();
+            rectangleFirst = null;
+            rectangleLast = null;
+        }
     }
-
 }

@@ -12,7 +12,9 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="1*"></RowDefinition>
+	        <RowDefinition Height="1*"></RowDefinition>
             <RowDefinition Height="1*"></RowDefinition>
+	        <RowDefinition Height="1*"></RowDefinition>
             <RowDefinition Height="3*"></RowDefinition>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
@@ -20,19 +22,36 @@
             <ColumnDefinition Width="9*" ></ColumnDefinition>
         </Grid.ColumnDefinitions>
 
-        <Canvas x:Name="MainRoot" Grid.Row="0" Grid.Column="1" Grid.RowSpan="3"></Canvas>
-	    <Button Grid.Column="0" Grid.Row="0"
+        <Canvas x:Name="MainRoot" Grid.Row="0" Grid.Column="3" Grid.RowSpan="3"></Canvas>
+        <Button Grid.Row="0"
 				x:Name="CreateFigure"
 	            Width="50" Height="50" 
 	            Background="BlueViolet" 
 	            Canvas.Left="10" Canvas.Top="10"
-	            Click="CreateFigure_Click"/>
+				Content="Person"
+				Click="CreateFigure_Click"/>
         <Button Grid.Column="0" Grid.Row="1"
                 x:Name="FigureConnect" 
                 Width="50" Height="50" 
                 Background="BlueViolet" 
                 Canvas.Left="10" Canvas.Top="100"
+                Content="Connect"
                 Click="FigureConnect_Click"/>
+        <Button Grid.Column="0" Grid.Row="2"
+                x:Name="File" 
+                Width="50" Height="50" 
+                Background="BlueViolet" 
+                Canvas.Left="10" Canvas.Top="100"
+                Content="File"
+                Click="File_Click"/>
+        <Button Grid.Column="0" Grid.Row="3"
+                x:Name="Save" 
+                Width="50" Height="50" 
+                Background="BlueViolet" 
+                Canvas.Left="10" Canvas.Top="100"
+                Content="Save"
+                Click="Save_Click"/>
+
     </Grid>
 
 
