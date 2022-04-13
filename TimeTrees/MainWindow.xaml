@@ -15,11 +15,12 @@
 	        <RowDefinition Height="1*"></RowDefinition>
             <RowDefinition Height="1*"></RowDefinition>
 	        <RowDefinition Height="1*"></RowDefinition>
-            <RowDefinition Height="3*"></RowDefinition>
+	        <RowDefinition Height="1*"></RowDefinition>
+            <RowDefinition Height="2*"></RowDefinition>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="1*"></ColumnDefinition>
-            <ColumnDefinition Width="9*" ></ColumnDefinition>
+            <ColumnDefinition Width="10*" ></ColumnDefinition>
         </Grid.ColumnDefinitions>
 
         <Canvas x:Name="MainRoot" Grid.Row="0" Grid.Column="3" Grid.RowSpan="3"></Canvas>
@@ -51,6 +52,13 @@
                 Canvas.Left="10" Canvas.Top="100"
                 Content="Save"
                 Click="Save_Click"/>
+        <Button Grid.Column="0" Grid.Row="4"
+                x:Name="Clear" 
+                Width="50" Height="50" 
+                Background="BlueViolet" 
+                Canvas.Left="10" Canvas.Top="100"
+                Content="Clear"
+                Click="Clear_Click"/>
 
     </Grid>
 

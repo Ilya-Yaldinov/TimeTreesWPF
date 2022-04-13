@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using Newtonsoft.Json;
@@ -37,19 +38,18 @@ namespace TimeTrees
                 person.Name = line[1];
                 person.Birth = ParseDate(line[2]);
                 person.Death = string.IsNullOrEmpty(line[3]) ? null : ParseDate(line[3]);
-                person.FirstPurrent = string.IsNullOrEmpty(line[4]) ? null : line[4];
-                person.SecondPurrent = string.IsNullOrEmpty(line[5]) ? null : line[5];
+                person.Parrents = line[4].Split(",");
+                bool hasSpouse = int.TryParse(line[5], out int spouse);
+                if (hasSpouse) person.Spouse = spouse;
+                person.Childrens = line[6].Split(",");
+                string[] position = line[7].Split(",");
+                person.PositionX = Convert.ToInt32(position[0]);
+                person.PositionY = Convert.ToInt32(position[1]);
 
                 peoples[i] = person;
             }
 
             return peoples;
-        }
-
-        public Person[] ReadJsonPerson(string path)
-        {
-            string jsonPerson = File.ReadAllText(path);
-            return JsonConvert.DeserializeObject<Person[]>(jsonPerson);
         }
     }
 
@@ -59,7 +59,10 @@ namespace TimeTrees
         public string Name { get; set; }
         public DateTime Birth { get; set; }
         public DateTime? Death { get; set; }
-        public string? FirstPurrent { get; set; }
-        public string? SecondPurrent { get; set; }
+        public string[] Parrents { get; set; }
+        public int? Spouse { get; set; }
+        public string[] Childrens { get; set; }
+        public double PositionX { get; set; }
+        public double PositionY { get; set; }
     }
 }

@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
@@ -28,16 +29,16 @@ namespace TimeTrees
         private void CreateFigure_Click(object sender, RoutedEventArgs e)
         {
             StackPanel stackPanel = _createObject.CreateIcon();
-            AddIconToCanvas(stackPanel);
+            AddIconToCanvas(stackPanel, 350, 180);
         }
 
-        private void AddIconToCanvas(StackPanel stackPanel)
+        private void AddIconToCanvas(StackPanel stackPanel, double x, double y)
         {
             _connections.Add(stackPanel, new List<Line>());
             MainRoot.Children.Add(stackPanel);
 
-            Canvas.SetLeft(stackPanel, 350);
-            Canvas.SetTop(stackPanel, 180);
+            Canvas.SetLeft(stackPanel, x);
+            Canvas.SetTop(stackPanel, y);
 
             stackPanel.MouseLeftButtonDown += (sender, e) => FigureMouseDown(sender, e);
             stackPanel.MouseMove += (sender, e) => FigureMouseMove(sender, e);
@@ -65,7 +66,7 @@ namespace TimeTrees
                 foreach(Person person in people)
                 {
                     StackPanel stackPanel = _createObject.CreateIcon(person);
-                    AddIconToCanvas(stackPanel);
+                    AddIconToCanvas(stackPanel, person.PositionX, person.PositionY);
                 }
                 foreach(Person person in people)
                 {
@@ -74,118 +75,69 @@ namespace TimeTrees
                 RedrawCanvas();
             }
         }
-
-        private void AddKinship(Person people)
-        {
-            string name = people.Name;
-            string parrentFirst =  people.FirstPurrent;
-            string parrentSecond = people.SecondPurrent;
-            if(parrentFirst != null && parrentSecond != null)
-            {
-                AddRelationship(parrentFirst, parrentSecond);
-            }
-            double startPosX = 0;
-            double startPosY = 0;
-            double endPosX = 0;
-            double endPosY = 0;
-            StackPanel? startValue = null;
-            StackPanel? endValue = null;
-            foreach (var startKeyValue in _connections)
-            {
-                foreach (var nameOfBox in startKeyValue.Key.Children)
-                {
-                    TextBox textBox = (TextBox)nameOfBox;
-                    if (name == textBox.Text)
-                    {
-                        startValue = startKeyValue.Key;
-                        startPosX = Canvas.GetLeft(startKeyValue.Key);
-                        startPosY = Canvas.GetTop(startKeyValue.Key);
-                    }
-                    break;
-                }
-            }
-            foreach (var endKeyValue in _connections)
-            {
-                foreach (var nameOfBox in endKeyValue.Key.Children)
-                {
-                    TextBox textBox = (TextBox)nameOfBox;
-                    if (parrentFirst == textBox.Text || parrentSecond == textBox.Text)
-                    {
-                        endValue = endKeyValue.Key;
-                        endPosX = Canvas.GetLeft(endKeyValue.Key);
-                        endPosY = Canvas.GetTop(endKeyValue.Key);
-                        Line line = _createObject.CreateLine();
-                        line.X1 = startPosX;
-                        line.Y1 = startPosY;
-                        line.X2 = endPosX;
-                        line.Y2 = endPosY;
-                        _connections[startValue].Add(line);
-                        _connections[endValue].Add(line);
-                        MainRoot.Children.Add(line);
-                        line.MouseRightButtonDown += Kinship;
-                    }
-                    break;
-                }
-            }
-        }
-
-        private void AddRelationship(string parrentFirst, string parrentSecond)
-        {
-            double startPosX = 0;
-            double startPosY = 0;
-            double endPosX = 0;
-            double endPosY = 0;
-            StackPanel? startValue = null;
-            StackPanel? endValue = null;
-            foreach (var startKeyValue in _connections)
-            {
-                foreach (var nameOfBox in startKeyValue.Key.Children)
-                {
-                    TextBox textBox = (TextBox)nameOfBox;
-                    if (parrentFirst == textBox.Text)
-                    {
-                        startValue = startKeyValue.Key;
-                        startPosX = Canvas.GetLeft(startKeyValue.Key);
-                        startPosY = Canvas.GetTop(startKeyValue.Key);
-                    }
-                    break;
-                }
-            }
-            foreach (var endKeyValue in _connections)
-            {
-                foreach (var nameOfBox in endKeyValue.Key.Children)
-                {
-                    TextBox textBox = (TextBox)nameOfBox;
-                    if (parrentSecond == textBox.Text)
-                    {
-                        endValue = endKeyValue.Key;
-                        endPosX = Canvas.GetLeft(endKeyValue.Key);
-                        endPosY = Canvas.GetTop(endKeyValue.Key);
-                        Line line = _createObject.CreateLine();
-                        line.Stroke = Brushes.Red;
-                        line.X1 = startPosX;
-                        line.Y1 = startPosY;
-                        line.X2 = endPosX;
-                        line.Y2 = endPosY;
-                        _connections[startValue].Add(line);
-                        _connections[endValue].Add(line);
-                        MainRoot.Children.Add(line);
-                        line.MouseRightButtonDown += Kinship;
-                    }
-                    break;
-                }
-            }
-
-        }
-
         private void Save_Click(object sender, RoutedEventArgs e)
         {
-            if (!_isFileOpen) 
+            if (!_isFileOpen)
             {
                 AddToNewFile();
                 return;
             }
             AddToThisFile();
+        }
+
+        private void Clear_Click(object sender, RoutedEventArgs e)
+        {
+            ConnectionFigures connectionFigures = ConnectionFigures.GetInstance();
+            connectionFigures.Clear();
+            _connections.Clear();
+            MainRoot.Children.Clear();
+            _path = null;
+            _isFileOpen = false;
+        }
+
+        private void AddKinship(Person people)
+        {
+            int id = people.Id;
+            double startPosX = Canvas.GetLeft(_connections.ElementAt(id - 1).Key);
+            double startPosY = Canvas.GetTop(_connections.ElementAt(id - 1).Key);
+            string[] parrents = people.Parrents;
+            foreach(string parrent in parrents)
+            {
+                if (!string.IsNullOrEmpty(parrent) && !string.IsNullOrWhiteSpace(parrent))
+                {
+                    double endPosX = Canvas.GetLeft(_connections.ElementAt(Convert.ToInt32(parrent) - 1).Key);
+                    double endPosY = Canvas.GetTop(_connections.ElementAt(Convert.ToInt32(parrent) - 1).Key);
+                    Line line = _createObject.CreateLine();
+                    line.X1 = startPosX;
+                    line.Y1 = startPosY;
+                    line.X2 = endPosX;
+                    line.Y2 = endPosY;
+                    _connections.ElementAt(Convert.ToInt32(parrent) - 1).Value.Add(line);
+                    _connections.ElementAt(id - 1).Value.Add(line);
+                    MainRoot.Children.Add(line);
+                    line.MouseRightButtonDown += Kinship;
+                }
+            }
+            if (people.Spouse.HasValue)
+            {
+                AddSpouse(people, startPosX, startPosY);
+            }
+        }
+
+        private void AddSpouse(Person people, double startPosX, double startPosY)
+        {
+            double endPosX = Canvas.GetLeft(_connections.ElementAt(people.Spouse.Value - 1).Key);
+            double endPosY = Canvas.GetTop(_connections.ElementAt(people.Spouse.Value - 1).Key);
+            Line line = _createObject.CreateLine();
+            line.X1 = startPosX;
+            line.Y1 = startPosY;
+            line.X2 = endPosX;
+            line.Y2 = endPosY;
+            line.Stroke = Brushes.Red;
+            _connections.ElementAt(people.Spouse.Value - 1).Value.Add(line);
+            _connections.ElementAt(people.Id - 1).Value.Add(line);
+            MainRoot.Children.Add(line);
+            line.MouseRightButtonDown += Kinship;
         }
 
         public void AddToThisFile()
@@ -250,55 +202,96 @@ namespace TimeTrees
                     }
                 }
                 StringBuilder stringBuilder = ConnectionToString(sb, keyValue);
+                double posX = Canvas.GetLeft(keyValue.Key);
+                double posY = Canvas.GetTop(keyValue.Key);
+                stringBuilder.Append($"{posX},{posY};");
                 string line = stringBuilder.ToString();
-                if(line.Split(";").Length != 7)
-                {
-                    for(int i = line.Split(";").Length; i < 7; i++)
-                    {
-                        stringBuilder.Append(" ;");
-                    }
-                }
                 result.Add(stringBuilder.ToString());
             }
             return result;
         }
 
-        private StringBuilder ConnectionToString(StringBuilder sb, KeyValuePair<StackPanel, List<Line>> startValue)
+        private StringBuilder ConnectionToString(StringBuilder sb, KeyValuePair<StackPanel, List<Line>> keyValue)
         {
             int parrentCount = 0;
-            double startPos = Canvas.GetTop(startValue.Key);
-            foreach (var keyValue in _connections)
+            int childrenCount = 0;
+            int? spouse = null;
+            List<int> parrents = new List<int>();
+            List<int> children = new List<int>();
+            double startPos = Canvas.GetTop(keyValue.Key);
+            for (int i = 0; i < _connections.Count; i++)
             {
-                if (startValue.Key != keyValue.Key)
+                if (_connections.ElementAt(i).Key != keyValue.Key)
                 {
-                    foreach (var startOfLine in startValue.Value)
+                    foreach (var start in keyValue.Value)
                     {
-                        if (startOfLine.Stroke == Brushes.LightBlue)
+                        foreach (var end in _connections.ElementAt(i).Value)
                         {
-                            foreach (var endOfLine in keyValue.Value)
+                            if (start == end)
                             {
-                                if (startOfLine == endOfLine)
+                                if (start.Stroke == Brushes.Red)
                                 {
-                                    double endPos = Canvas.GetTop(keyValue.Key);
-                                    foreach (var name in keyValue.Key.Children)
+                                    spouse = i + 1;
+                                }
+                                if (start.Stroke == Brushes.LightBlue)
+                                {
+                                    double endPos = Canvas.GetTop(_connections.ElementAt(i).Key);
+                                    if (endPos < startPos)
                                     {
-                                        if ( endPos < startPos)
-                                        {
-                                            TextBox text = (TextBox)name;
-                                            sb.Append($"{text.Text};");
-                                            parrentCount++;
-                                            break;
-                                        }
+                                        parrents.Add(i+1);
                                     }
-                                    if (parrentCount == 3)
+                                    else
                                     {
-                                        throw new Exception("Родителей может быть не больше двух!");
+                                        children.Add(i+1);
                                     }
                                 }
                             }
                         }
                     }
                 }
+            }
+            foreach(var parrent in parrents)
+            {
+                parrentCount++;
+                sb.Append($"{Convert.ToInt32(parrent)},");
+            }
+            if(parrentCount > 2)
+            {
+                throw new Exception("Родителей не может быть больше двух.");
+            }
+            else if(parrentCount > 0)
+            {
+                sb.Remove(sb.Length - 1, 1);
+                sb.Append(";");
+            }
+            else
+            {
+                sb.Append(" ;");
+            }
+
+            if(spouse == null)
+            {
+                sb.Append(" ;");
+            }
+            else
+            {
+                sb.Append($"{spouse.Value};");
+            }
+            
+            foreach(var child in children)
+            {
+                childrenCount++;
+                sb.Append($"{Convert.ToInt32(child)},");
+            }
+
+            if(childrenCount > 0)
+            {
+                sb.Remove(sb.Length - 1, 1);
+                sb.Append(";");
+            }
+            else
+            {
+                sb.Append(" ;");
             }
 
             return sb;
@@ -413,15 +406,63 @@ namespace TimeTrees
                 double line1 = Math.Sqrt(Math.Pow(point.X + stackPanel.ActualWidth / 2 - line.X1, 2) + Math.Pow(point.Y + stackPanel.ActualHeight / 2 - line.Y1, 2));
                 double line2 = Math.Sqrt(Math.Pow(point.X + stackPanel.ActualWidth / 2 - line.X2, 2) + Math.Pow(point.Y + stackPanel.ActualHeight / 2 - line.Y2, 2));
 
-                if(line1 < line2)
+                if(line.Stroke == Brushes.LightBlue)
                 {
-                    line.X1 = point.X + stackPanel.ActualWidth / 2;
-                    line.Y1 = point.Y + stackPanel.ActualHeight / 2;
+                    if(line.Y1 >= line.Y2)
+                    {
+                        if (line1 >= line2)
+                        {
+                            line.X1 = point.X + stackPanel.ActualWidth / 2;
+                            line.Y1 = point.Y + stackPanel.ActualHeight;
+                        }
+                        else
+                        {
+                            line.X2 = point.X + stackPanel.ActualWidth / 2;
+                            line.Y2 = point.Y;
+                        }
+                    }
+                    else
+                    {
+                        if (line1 <= line2)
+                        {
+                            line.X1 = point.X + stackPanel.ActualWidth / 2;
+                            line.Y1 = point.Y + stackPanel.ActualHeight;
+                        }
+                        else
+                        {
+                            line.X2 = point.X + stackPanel.ActualWidth / 2;
+                            line.Y2 = point.Y;
+                        }
+                    }
                 }
-                else
+                if (line.Stroke == Brushes.Red)
                 {
-                    line.X2 = point.X + stackPanel.ActualWidth / 2;
-                    line.Y2 = point.Y + stackPanel.ActualHeight / 2;
+                    if(line.X1 > line.X2)
+                    {
+                        if (line1 >= line2)
+                        {
+                            line.X1 = point.X + stackPanel.ActualWidth;
+                            line.Y1 = point.Y + stackPanel.ActualHeight / 2;
+                        }
+                        else
+                        {
+                            line.X2 = point.X;
+                            line.Y2 = point.Y + stackPanel.ActualHeight / 2;
+                        }
+                    }
+                    else
+                    {
+                        if (line1 <= line2)
+                        {
+                            line.X1 = point.X + stackPanel.ActualWidth;
+                            line.Y1 = point.Y + stackPanel.ActualHeight / 2;
+                        }
+                        else
+                        {
+                            line.X2 = point.X;
+                            line.Y2 = point.Y + stackPanel.ActualHeight / 2;
+                        }
+                    }
                 }
             }
         }
